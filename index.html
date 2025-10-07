@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Run For Girl Child</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #1f1f1f;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 8px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px;
+            background: linear-gradient(to right, #ff6b6b, #ff8e8e);
+            border-radius: 10px;
+            margin-bottom: 5px;
+        }
+
+        .month-year {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .event-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 8px 0;
+            line-height: 1.2;
+        }
+
+        .event-subtitle {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+
+        .event-host {
+            margin-top: 8px;
+            font-size: 1.1rem;
+        }
+
+        .event-host ul {
+            list-style: none;
+            margin-top: 5px;
+        }
+
+        .event-host li {
+            margin: 5px 0;
+            font-weight: 600;
+        }
+
+        .recorder-container {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            background-color: #000;
+            aspect-ratio: 9/16; /* Maintain frame aspect ratio */
+        }
+
+        #frame {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+        }
+
+        #webcam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        /* --- Webcam visible area --- */
+        .webcam-area {
+            position: absolute;
+            top: 25%;
+            left: 10%;
+            width: 80%;
+            height: 45%;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .webcam-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: #000;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 0;
+            width: 100%;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+            min-height: 50px;
+        }
+
+        .btn i {
+            font-size: 1.1rem;
+        }
+
+        .btn-picture {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-download {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-share {
+            background-color: #9C27B0;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .status {
+            margin: 0;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem;
+            border-left: 3px solid #ff6b6b;
+            line-height: 1.3;
+        }
+
+        .download-notification {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: none;
+            animation: slideIn .3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 0.85rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* --- Mobile optimization --- */
+        @media (max-width: 600px) {
+            body {
+                padding: 6px;
+                justify-content: flex-start;
+            }
+
+            .container {
+                gap: 8px;
+            }
+
+            .header {
+                padding: 8px;
+            }
+
+            .month-year {
+                font-size: 1.3rem;
+            }
+
+            .event-title {
+                font-size: 1.6rem;
+            }
+
+            .event-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .event-host {
+                font-size: 1rem;
+            }
+
+            .recorder-container {
+                border-radius: 10px;
+            }
+
+            .webcam-area {
+                top: 25%;
+                left: 10%;
+                width: 80%;
+                height: 45%;
+                border-radius: 6px;
+            }
+
+            .controls {
+                gap: 6px;
+            }
+
+            .button-row {
+                gap: 6px;
+            }
+
+            .btn {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+                min-height: 45px;
+                border-radius: 25px;
+            }
+
+            .btn i {
+                font-size: 1rem;
+            }
+
+            .status {
+                font-size: 0.8rem;
+                padding: 8px;
+            }
+        }
+
+        /* Small mobile devices */
+        @media (max-width: 400px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                gap: 6px;
+            }
+
+            .header {
+                padding: 6px;
+            }
+
+            .month-year {
+                font-size: 1.2rem;
+            }
+
+            .event-title {
+                font-size: 1.4rem;
+            }
+
+            .event-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .event-host {
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                padding: 8px 10px;
+                font-size: 0.85rem;
+                min-height: 42px;
+                gap: 6px;
+            }
+            
+            .btn i {
+                font-size: 0.9rem;
+            }
+
+            .status {
+                font-size: 0.75rem;
+                padding: 7px;
+            }
+
+            .download-notification {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 350px) {
+            .btn {
+                padding: 7px 9px;
+                font-size: 0.8rem;
+                min-height: 40px;
+            }
+            
+            .btn i {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Landscape mode */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                max-width: 100%;
+                gap: 5px;
+            }
+            
+            .recorder-container {
+                max-height: 60vh;
+            }
+            
+            .controls {
+                flex-direction: row;
+                gap: 5px;
+            }
+            
+            .button-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .btn {
+                padding: 5px 8px;
+                font-size: 0.7rem;
+                min-height: 32px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="recorder-container">
+            <!-- ACTUAL FRAME IMAGE -->
+            <img id="frame" src="frame.png" alt="Event Frame" />
+            <div class="webcam-area">
+                <!-- LIVE WEBCAM FEED -->
+                <video id="webcam" class="webcam-feed" autoplay muted playsinline></video>
+            </div>
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <div class="button-row">
+                <button id="pictureBtn" class="btn btn-picture"><i class="fas fa-camera"></i>Take Picture</button>
+            </div>
+            <div class="button-row">
+                <button id="downloadBtn" class="btn btn-download" disabled><i class="fas fa-download"></i>Download</button>
+                <button id="shareBtn" class="btn btn-share" disabled><i class="fas fa-share-alt"></i>Share</button>
+            </div>
+        </div>
+
+        <div id="status" class="status">Webcam is active. Click "Take Picture" to capture your image.</div>
+    </div>
+
+    <div id="downloadNotification" class="download-notification">
+        <i class="fas fa-check-circle"></i> File downloaded successfully!
+    </div>
+
+    <script>
+        const webcam = document.getElementById('webcam');
+        const frame = document.getElementById('frame');
+        const canvas = document.getElementById('canvas');
+        const pictureBtn = document.getElementById('pictureBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const status = document.getElementById('status');
+        const downloadNotification = document.getElementById('downloadNotification');
+
+        let stream = null;
+        let capturedImage = null;
+        let webcamAspectRatio = 16/9;
+
+        // Function to detect if user is on mobile
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // Function to scroll to bottom
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        async function initWebcam() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        frameRate: { ideal: 30, max: 30 },
+                        aspectRatio: 16/9
+                    },
+                    audio: false
+                });
+
+                webcam.srcObject = stream;
+                
+                // Get actual webcam dimensions and aspect ratio
+                await new Promise(resolve => {
+                    webcam.addEventListener('loadedmetadata', () => {
+                        const track = stream.getVideoTracks()[0];
+                        const settings = track.getSettings();
+                        webcamAspectRatio = settings.width / settings.height;
+                        resolve();
+                    });
+                });
+                
+                // Set up canvas with proper dimensions
+                setupCanvas();
+                
+                status.textContent = 'Webcam is active. Click "Take Picture" to capture your image.';
+            } catch (err) {
+                console.error('Error accessing webcam:', err);
+                status.textContent = 'Error accessing webcam: ' + err.message;
+                
+                // Create a placeholder for demo purposes
+                const placeholderStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480 }
+                }).catch(() => null);
+                
+                if (placeholderStream) {
+                    webcam.srcObject = placeholderStream;
+                    setupCanvas();
+                }
+            }
+        }
+
+        function setupCanvas() {
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas to match the frame dimensions
+            canvas.width = frame.offsetWidth;
+            canvas.height = frame.offsetHeight;
+            
+            // Start the composite drawing
+            requestAnimationFrame(drawComposite);
+        }
+
+        function drawComposite() {
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw the frame (background with all design elements)
+            ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+            
+            // Draw webcam in the exact same position as shown on webpage
+            if (webcam.readyState >= 2) {
+                const webcamArea = document.querySelector('.webcam-area');
+                const rect = webcamArea.getBoundingClientRect();
+                const containerRect = frame.getBoundingClientRect();
+                
+                // Calculate relative position within the frame
+                const relativeX = (rect.left - containerRect.left) * (canvas.width / containerRect.width);
+                const relativeY = (rect.top - containerRect.top) * (canvas.height / containerRect.height);
+                const relativeWidth = rect.width * (canvas.width / containerRect.width);
+                const relativeHeight = rect.height * (canvas.height / containerRect.height);
+                
+                // Calculate aspect ratio correct dimensions to FILL the entire area
+                const containerAspectRatio = relativeWidth / relativeHeight;
+                let drawWidth = relativeWidth;
+                let drawHeight = relativeHeight;
+                let drawX = relativeX;
+                let drawY = relativeY;
+                
+                // Maintain webcam aspect ratio but FILL the entire area (crop if needed)
+                if (webcamAspectRatio > containerAspectRatio) {
+                    // Webcam is wider than container - fit to height (crop sides)
+                    drawWidth = relativeHeight * webcamAspectRatio;
+                    drawX = relativeX + (relativeWidth - drawWidth) / 2;
+                } else {
+                    // Webcam is taller than container - fit to width (crop top/bottom)
+                    drawHeight = relativeWidth / webcamAspectRatio;
+                    drawY = relativeY + (relativeHeight - drawHeight) / 2;
+                }
+                
+                // Create rounded corners for webcam feed
+                ctx.save();
+                ctx.beginPath();
+                ctx.roundRect(relativeX, relativeY, relativeWidth, relativeHeight, 8);
+                ctx.clip();
+                
+                // Draw webcam feed to FILL the entire area (may crop parts of the webcam)
+                ctx.drawImage(webcam, drawX, drawY, drawWidth, drawHeight);
+                ctx.restore();
+                
+                // Draw border
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(relativeX, relativeY, relativeWidth, relativeHeight);
+            }
+            
+            requestAnimationFrame(drawComposite);
+        }
+
+        function takePicture() {
+            try {
+                // Capture the current canvas as an image (includes frame + webcam)
+                canvas.toBlob(function(blob) {
+                    capturedImage = blob;
+                    
+                    // Enable download and share buttons
+                    downloadBtn.disabled = false;
+                    shareBtn.disabled = false;
+                    
+                    status.textContent = 'Picture captured successfully! You can now download or share it.';
+                }, 'image/png');
+                
+            } catch (error) {
+                status.textContent = 'Error capturing picture: ' + error.message;
+            }
+        }
+
+        function downloadPicture() {
+            if (capturedImage) {
+                const url = URL.createObjectURL(capturedImage);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Run_For_Girl_Child_${Date.now()}.png`;
+
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                }, 1000);
+                
+                showNotification();
+            }
+        }
+
+        async function sharePicture() {
+            if (!capturedImage) return alert('No picture available to share!');
+            
+            const file = new File([capturedImage], `Run_For_Girl_Child.png`, { 
+                type: 'image/png' 
+            });
+            
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: 'Run For Girl Child Picture',
+                        text: 'Check out my picture!',
+                        files: [file]
+                    });
+                    status.textContent = 'Picture shared successfully!';
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        status.textContent = 'Sharing failed. Try downloading instead.';
+                    }
+                }
+            } else {
+                alert('Sharing not supported. Please download the picture instead.');
+            }
+        }
+
+        function showNotification() {
+            downloadNotification.style.display = 'block';
+            setTimeout(() => downloadNotification.style.display = 'none', 3000);
+        }
+
+        pictureBtn.onclick = takePicture;
+        downloadBtn.onclick = downloadPicture;
+        shareBtn.onclick = sharePicture;
+        
+        // Initialize when page loads
+        window.onload = function() {
+            initWebcam();
+            
+            // Auto-scroll to bottom on mobile devices
+            if (isMobileDevice()) {
+                // Small delay to ensure page is fully loaded
+                setTimeout(() => {
+                    scrollToBottom();
+                }, 500);
+            }
+        };
+    </script>
+</body>
+
+</html>
